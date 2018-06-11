@@ -5,8 +5,18 @@ import ExtendedPoint
 __author__ = ['Paul Schrum']
 
 class ExtendedPointSequence(list):
+
+    possible_coordinate_systems = ["XY", "LatLong"]
+    _coordinate_system = "XY"
+
     def __init__(self):
         pass
+
+    def set_coordinate_system(self, coordiante_system):
+        if coordiante_system not in self.possible_coordinate_systems:
+            raise ValueError("{0} is not an allowed coordiante system."
+                             .format_map(coordiante_system))
+        self._coordinate_system = coordiante_system
 
     def computeAllPointInformation(self):
         """
@@ -36,8 +46,24 @@ class ExtendedPointSequence(list):
                 writeStr = str(point)
                 f.write(writeStr + '\n')
 
+def CreateExtendedPointSequenceFromLatLong(lat_long_point_sequence):
+    returnSequence = ExtendedPointSequence()
+    returnSequence.set_coordinate_system('LatLong')
+    for a_point in lat_long_point_sequence:
+        new_extended_point = EP(a_point.lon, a_point.lat)
 
-def CreateExtendedPointList(csvFileName):
+        # try: new_extended_point.time = a_point.time
+        # except AttributeError: pass
+        new_extended_point.add_attr('time', a_point)
+        new_extended_point.add_attr('speed', a_point)
+
+        returnSequence.append(new_extended_point)
+
+
+    return returnSequence
+
+
+def CreateExtendedPointSequenceFromXYcsv(csvFileName, coordianteMode='LatLong'):
     '''
     Factory method. Use this instead of variable = ExtendedPointList().
     Args:
@@ -70,7 +96,7 @@ if __name__ == '__main__':
         inFileName = sys.argv[1]
         outFileName = sys.argv[2]
 
-    aPointList = CreateExtendedPointList(inFileName)
+    aPointList = CreateExtendedPointSequenceFromXYcsv(inFileName)
     aPointList.computeAllPointInformation()
     aPointList.writeToCSV(outFileName)
 
