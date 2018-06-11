@@ -1,0 +1,96 @@
+Short Documentation of the Quick Projection method
+Paul Schrum
+
+When working with Latitude and Longitude coordinates, it can be a challenge to get accurate point
+to point distances and bearings because the equations are embedded on the spheroid. The math is
+hard, and once we get the math right, the computations take much more time than the same equations
+embedded in the plane.
+
+To address this, with conceptual help from coworkers at Sandia National Lab (where I am a student
+intern), I have come up with a quick way to work with Lat/Long coordinates which reduces the
+spherical error to very small for short distances (less than 10 km, maybe),
+
+Note: this method does not account for when points are close to the poles or for when point-to-
+point lines cross the antipodal meridian. Also, it does not give perfect accuracy. I am hoping it
+good enough to be useful for datasets where the samples have some error (like most gps fixes) or
+the results don't have to be perfect, or both.
+
+The method was invented (or likely reinvented by me) to serve the ExtendedPoint class and the
+ExtendedPointList class. (See https://github.com/PaulSchrum/RoadGeometryAnalysis) I needed a way
+to work with lat/long for those classes because so much data comes in that form. At some later
+date I might study how close the values are to truly projected values and find a way to determine
+how good is good enough.
+
+The Approach
+The idea is to convert lat/long to Cartesian coordinates (E3) to compute distances, bearings, and
+the deflection. This idea is not new. It is recommended in Wikipedia, and it what some others
+already use. However, just doing this leaves the point in E3, and projecting them to the plane
+is expensive because that is not normal to any E3 axis, so there are always 3 points to work
+with.
+
+What is novel about this approach (or so I suppose), is that all three points are conceptually
+together so that Point 2 is at Lat/Long 0,0. Then points 1 and 3 are as close to 0,0 as they are
+to Point 2. By doing this, we are immediately projected to the yz plane (touching the Earth's
+surface at 0,0). There is a little spherical distortion, but it is slight enough to ignore given
+other limitations (mentioned above).
+
+Note that the method still does adjust r for the ellipsoid. (Radius from the center of the earth to
+the surface. This is because the coordinate system is really what is being rotated, not the point,
+so the distance r: b <= r <= a still holds true.
+
+Steps
+1. Adjust lat/long of Point 2 to 0, 0. Adjust lat/long of Point 1 and 3 the same amount
+    by subtracting their values from Point 2, then scale δLong by the equation:
+            δLong(adj) = δLong(orig) / cos(Lat(orig))
+        This adjusts for Longitude Dilation when rotating the coordinate syste.
+
+2. Convert the coordinates to xyz.
+
+3. Work with the points as they project planarly to the yz plane, just map y to x and z to y.
+
+The point coordiantes of x,y are now suited to be used by ExtendedPoint to compute arc
+values, etc.
+
+Details
+Preserve originals of Point1, 2, and 3
+Step 1.
+
+    Delta12 = Point2 - Point1
+    Delta23 = Point2 - Point3
+
+    Point2new = Point2 - Point2   # == 0, 0, alt
+    Point1new = Point2 + Delta12
+    Point3new = Point2 + Delta23
+
+    Point1new.long = Point1new.long / cos(Point2.lat)
+    Point3new.long = Point3new.long / cos(Point2.lat)
+
+Step 2.
+    From wikipedia, a(Earth) = 6378.1, b(Earth) = 6356.8
+    r = ab / sqrt( (a*sin(Point2.Lat)2 + (b*cos(Point2.Lat)2 )
+    r += convert_to_km(Point2.altitude)
+
+    x2 = r
+    y2 = 0.0
+    z2 = 0.0
+
+    x1 = r * cos(Point1new.Long) * sin(Point1new.Lat)
+    y1 = r * cos(Point1new.Lat) * sin(Point1new.Long)
+    z1 = r * sin(Point1new.Lat)
+
+    x3 = r * cos(Point3new.Long) * sin(Point3new.Lat)
+    y3 = r * cos(Point3new.Lat) * sin(Point3new.Long)
+    z3 = r * sin(Point3new.Lat)
+
+Step 3
+    Point1.x = y1
+    Point1.y = z1
+
+    Point2.x = Point2.y = 0
+
+    Point3.x = y3
+    Point3.y = z3
+
+The three points are now ready to work with in ExtendedPointList.
+
+
