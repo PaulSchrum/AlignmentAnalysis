@@ -87,7 +87,6 @@ class ExtendedPoint(object):
         except AttributeError:
             return False
         return True
-        return True
 
     def __repr__(self):
         return '{0}, {1}: Mag {2}  Az {3}'.format(self.X,
