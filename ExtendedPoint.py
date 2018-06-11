@@ -72,6 +72,23 @@ class ExtendedPoint(object):
         self.arc = False
         self._parentPK = parentPK
 
+    def add_attr(self, attr_string, attr_owner):
+        """
+        Attempts to add a new attribute to the point. If the attribute
+        does not exist on the attr_owner, it does nothing.
+        :param attr_string: The name of the attribute to be added
+        :param attr_owner: the object to try to get the attribute from
+        :return: True if successful. False if fail.
+        :rtype: bool
+        """
+        try:
+            setattr(self, attr_string,
+                    getattr(attr_owner, attr_string))
+        except AttributeError:
+            return False
+        return True
+        return True
+
     def __repr__(self):
         return '{0}, {1}: Mag {2}  Az {3}'.format(self.X,
                                                   self.Y,
