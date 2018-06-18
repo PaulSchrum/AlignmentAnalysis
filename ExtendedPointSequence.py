@@ -30,7 +30,22 @@ class ExtendedPointSequence(list):
         for pt1, pt2, pt3 in zip(self[:-2],
                                  self[1:-1],
                                  self[2:]):
-            ExtendedPoint.compute_arc_parameters(pt1, pt2, pt3)
+            if self._coordinate_system == 'XY':
+                pt1Adj = pt1
+                pt2Adj = pt2
+                pt3Adj = pt3
+            else:
+                pt1Adj = pt1.newWithPointValues()
+                pt2Adj = pt2.newWithPointValues()
+                pt3Adj = pt3.newWithPointValues()
+                pt2Adj.adjustPointsFor0Lat0Long(pt1Adj, pt2Adj, pt3Adj)
+
+            ExtendedPoint.compute_arc_parameters(pt1Adj,
+                                                 pt2Adj,
+                                                 pt3Adj)
+
+            if self._coordinate_system != 'XY':
+                pt2.arc = pt2Adj.arc
 
     def writeToCSV(self, fileName):
         """

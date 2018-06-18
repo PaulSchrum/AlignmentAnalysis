@@ -1,48 +1,43 @@
 Short Documentation of the Quick Projection method
 Paul Schrum
 
-When working with Latitude and Longitude coordinates, it can be a challenge to get accurate point
-to point distances and bearings because the equations are embedded on the spheroid. The math is
-hard, and once we get the math right, the computations take much more time than the same equations
-embedded in the plane.
+When working with Latitude and Longitude coordinates, it can be a challenge to get accurate point to point distances and bearings because the equations are embedded on the spheroid. The math is
+hard, and once we get the math right, the computations take much more time than the same equations embedded in the plane.
 
-To address this, with conceptual help from coworkers at Sandia National Lab (where I am a student
-intern), I have come up with a quick way to work with Lat/Long coordinates which reduces the
-spherical error to very small for short distances (less than 10 km, maybe),
+To address this, with conceptual help from coworkers at Sandia National Lab (where I am a student intern), I have come
+    up with a quick way to work with Lat/Long coordinates which reduces the spherical error to very small for short
+    distances (less than 10 km, maybe).
 
-Note: this method does not account for when points are close to the poles or for when point-to-
-point lines cross the antipodal meridian. Also, it does not give perfect accuracy. I am hoping it
-good enough to be useful for datasets where the samples have some error (like most gps fixes) or
-the results don't have to be perfect, or both.
+Note: this method does not account for when points are close to the poles or for when point-to-point lines cross the
+    antipodal meridian. Also, it does not give perfect accuracy. I am hoping it good enough to be useful for datasets
+    where the samples have some error (like most gps fixes) or the results don't have to be perfect, or both.
 
-The method was invented (or likely reinvented by me) to serve the ExtendedPoint class and the
-ExtendedPointList class. (See https://github.com/PaulSchrum/RoadGeometryAnalysis) I needed a way
-to work with lat/long for those classes because so much data comes in that form. At some later
-date I might study how close the values are to truly projected values and find a way to determine
-how good is good enough.
+The method was invented (or likely reinvented) by me to serve the ExtendedPoint class and the ExtendedPointList class.
+    (See https://github.com/PaulSchrum/RoadGeometryAnalysis) I needed a way to work with lat/long for those classes
+    because so much data comes in that form. At some later date I might study how close the values are to truly
+    projected values and find a way to determine how good is good enough.
 
 The Approach
-The idea is to convert lat/long to Cartesian coordinates (E3) to compute distances, bearings, and
-the deflection. This idea is not new. It is recommended in Wikipedia, and it what some others
-already use. However, just doing this leaves the point in E3, and projecting them to the plane
-is expensive because that is not normal to any E3 axis, so there are always 3 points to work
-with.
+The idea is to convert lat/long to Cartesian coordinates (E3) in order to compute distances, bearings, and the
+    deflection. This idea is not new. It is recommended in Wikipedia, and it what some others already use. However,
+    just doing this leaves the point in E3, and projecting them to the plane is expensive because that is not normal
+    to any E3 axis, so there are always 3 points to work with.
 
-What is novel about this approach (or so I suppose), is that all three points are conceptually
-together so that Point 2 is at Lat/Long 0,0. Then points 1 and 3 are as close to 0,0 as they are
-to Point 2. By doing this, we are immediately projected to the yz plane (touching the Earth's
-surface at 0,0). There is a little spherical distortion, but it is slight enough to ignore given
-other limitations (mentioned above).
+What is novel about this approach (or so I suppose), is that all three points are conceptually together so that Point 2
+    is at Lat/Long 0,0. Then points 1 and 3 are as close to 0,0 as they are to Point 2. By doing this, we are
+    immediately projected to the yz plane (touching the Earth's surface at 0,0). There is a little spherical distortion,
+    but it is slight enough to ignore given other limitations (mentioned above).
 
-Note that the method still does adjust r for the ellipsoid. (Radius from the center of the earth to
-the surface. This is because the coordinate system is really what is being rotated, not the point,
-so the distance r: b <= r <= a still holds true.
+Note that the method still does adjust r for the ellipsoid. (Radius from the center of the earth to the surface. This
+    is because the coordinate system is really what is being rotated, not the point, so the distance r: b <= r <= a
+    still holds true.
 
 Steps
-1. Adjust lat/long of Point 2 to 0, 0. Adjust lat/long of Point 1 and 3 the same amount
-    by subtracting their values from Point 2, then scale δLong by the equation:
+1. Adjust lat/long of Point 2 to 0, 0. Adjust lat/long of Point 1
+	and 3 the same amount by subtracting their values from Point 
+	2, then scale δLong by the equation:
             δLong(adj) = δLong(orig) / cos(Lat(orig))
-        This adjusts for Longitude Dilation when rotating the coordinate syste.
+    This adjusts for Longitude Dilation when rotating the coordinate system.
 
 2. Convert the coordinates to xyz.
 

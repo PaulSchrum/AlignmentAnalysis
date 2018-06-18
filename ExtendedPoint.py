@@ -72,6 +72,9 @@ class ExtendedPoint(object):
         self.arc = False
         self._parentPK = parentPK
 
+    def newWithPointValues(self):
+        return ExtendedPoint((self.X, self.Y))
+
     def add_attr(self, attr_string, attr_owner):
         """
         Attempts to add a new attribute to the point. If the attribute
